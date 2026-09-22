@@ -35,9 +35,14 @@ def load_data():
         .str[0]
     )
 
-    # 총 관객을 숫자로 변환
+    # 숫자형 데이터로 변환
     df["total_audi"] = pd.to_numeric(
         df["total_audi"],
+        errors="coerce"
+    )
+
+    df["first_scrn"] = pd.to_numeric(
+        df["first_scrn"],
         errors="coerce"
     )
 
@@ -94,7 +99,6 @@ st.plotly_chart(
     use_container_width=True
 )
 
-
 st.markdown("#### 💡 이 그래프로 알 수 있는 것")
 
 st.info(
@@ -140,7 +144,6 @@ st.plotly_chart(
     fig2,
     use_container_width=True
 )
-
 
 st.markdown("#### 💡 이 그래프로 알 수 있는 것")
 
@@ -198,25 +201,21 @@ st.plotly_chart(
 # 3번 그래프 설명
 # ==================================================
 
-# 히스토그램과 같은 범위로 20개 구간을 직접 계산
 min_audi = hist_data["total_audi"].min()
 max_audi = hist_data["total_audi"].max()
 
-# 전체 범위를 20개 구간으로 나눔
 bin_width = (max_audi - min_audi) / 20
 
-# 혹시 모든 값이 같은 경우를 대비
 if bin_width == 0:
     most_common_start = int(min_audi)
     most_common_end = int(max_audi)
+
 else:
-    # 각 영화가 어느 구간에 속하는지 계산
     bin_numbers = (
         (hist_data["total_audi"] - min_audi)
         / bin_width
     ).astype(int)
 
-    # 가장 영화가 많이 들어 있는 구간
     most_common_bin = bin_numbers.value_counts().idxmax()
 
     most_common_start = int(
@@ -228,7 +227,6 @@ else:
     )
 
 
-# 총 관객이 가장 많은 영화
 top_movie = hist_data.loc[
     hist_data["total_audi"].idxmax()
 ]
@@ -242,4 +240,59 @@ st.info(
     f"몰려 있으며, 총 관객이 가장 많은 영화는 "
     f"**{top_movie['movieNm']}**"
     f"({int(top_movie['total_audi']):,}명)입니다."
+)
+
+
+# ==================================================
+# 4. 개봉일 스크린 수와 총 관객의 관계 - 산점도
+# ==================================================
+
+st.divider()
+
+st.subheader("🔵 4. 개봉일 스크린 수와 총 관객의 관계")
+
+scatter_data = df.dropna(
+    subset=["first_scrn", "total_audi", "movieNm", "genre"]
+).copy()
+
+
+fig4 = px.scatter(
+    scatter_data,
+    x="first_scrn",
+    y="total_audi",
+    color="genre",
+    hover_name="movieNm",
+    title="개봉일 스크린 수와 총 관객의 관계",
+    labels={
+        "first_scrn": "개봉일 스크린 수",
+        "total_audi": "총 관객(명)",
+        "genre": "장르"
+    }
+)
+
+fig4.update_traces(
+    marker=dict(
+        size=9,
+        opacity=0.75
+    )
+)
+
+fig4.update_layout(
+    xaxis_title="개봉일 스크린 수",
+    yaxis_title="총 관객(명)",
+    legend_title="장르",
+    margin=dict(t=60, b=20, l=20, r=20)
+)
+
+st.plotly_chart(
+    fig4,
+    use_container_width=True
+)
+
+
+st.markdown("#### 💡 이 그래프로 알 수 있는 것")
+
+st.info(
+    "개봉일 스크린 수와 총 관객의 관계를 살펴보고, "
+    "스크린 수가 많은 영화일수록 총 관객도 많은 경향이 나타나는지 확인할 수 있습니다."
 )
