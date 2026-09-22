@@ -65,7 +65,12 @@ fig1 = px.pie(
 
 fig1.update_traces(
     textinfo="label+percent",
-    hovertemplate="<b>%{label}</b><br>영화 편수: %{value}편<br>비율: %{percent}<extra></extra>"
+    hovertemplate=(
+        "<b>%{label}</b>"
+        "<br>영화 편수: %{value}편"
+        "<br>비율: %{percent}"
+        "<extra></extra>"
+    )
 )
 
 fig1.update_layout(
@@ -116,4 +121,71 @@ st.markdown("#### 💡 이 그래프로 알 수 있는 것")
 st.info(
     "여기에 각 장르에서 어떤 영화가 많은 관객을 기록했는지와 "
     "영화별 총 관객 규모의 차이를 설명하세요."
+)
+
+# --------------------------------------------------
+# 세 번째 그래프: 총 관객 히스토그램
+# --------------------------------------------------
+
+st.divider()
+st.subheader("📈 3. 영화별 총 관객 분포")
+
+hist_data = df.dropna(subset=["total_audi"]).copy()
+
+fig3 = px.histogram(
+    hist_data,
+    x="total_audi",
+    nbins=20,
+    title="영화별 총 관객 분포",
+    labels={
+        "total_audi": "총 관객(명)",
+        "count": "영화 편수"
+    }
+)
+
+fig3.update_traces(
+    hovertemplate=(
+        "총 관객 구간: %{x}<br>"
+        "영화 편수: %{y}편"
+        "<extra></extra>"
+    )
+)
+
+fig3.update_layout(
+    xaxis_title="총 관객(명)",
+    yaxis_title="영화 편수",
+    margin=dict(t=60, b=20, l=20, r=20)
+)
+
+st.plotly_chart(fig3, use_container_width=True)
+
+# 가장 많이 몰려 있는 구간 계산
+counts, bin_edges = pd.cut(
+    hist_data["total_audi"],
+    bins=20,
+    include_lowest=True,
+    retbins=True
+).value_counts().sort_index().values, pd.cut(
+    hist_data["total_audi"],
+    bins=20,
+    include_lowest=True,
+    retbins=True
+).value_counts().sort_index().index
+
+max_bin_index = counts.argmax()
+most_common_start = int(bin_edges[max_bin_index])
+most_common_end = int(bin_edges[max_bin_index + 1])
+
+# 가장 관객이 많은 영화
+top_movie = hist_data.loc[
+    hist_data["total_audi"].idxmax()
+]
+
+st.markdown("#### 💡 이 그래프로 알 수 있는 것")
+
+st.info(
+    f"대부분의 영화는 총 관객 **{most_common_start:,}명~"
+    f"{most_common_end:,}명 구간**에 몰려 있으며, "
+    f"총 관객이 가장 많은 영화는 **{top_movie['movieNm']}**"
+    f"({int(top_movie['total_audi']):,}명)입니다."
 )
