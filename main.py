@@ -46,6 +46,11 @@ def load_data():
         errors="coerce"
     )
 
+    df["first_week_audi"] = pd.to_numeric(
+        df["first_week_audi"],
+        errors="coerce"
+    )
+
     return df
 
 
@@ -69,7 +74,6 @@ genre_count = (
 )
 
 genre_count.columns = ["genre", "count"]
-
 
 fig1 = px.pie(
     genre_count,
@@ -119,7 +123,6 @@ treemap_data = df.dropna(
     subset=["total_audi", "movieNm"]
 ).copy()
 
-
 fig2 = px.treemap(
     treemap_data,
     path=["genre", "movieNm"],
@@ -165,7 +168,6 @@ hist_data = df.dropna(
     subset=["total_audi"]
 ).copy()
 
-
 fig3 = px.histogram(
     hist_data,
     x="total_audi",
@@ -197,10 +199,7 @@ st.plotly_chart(
 )
 
 
-# ==================================================
 # 3번 그래프 설명
-# ==================================================
-
 min_audi = hist_data["total_audi"].min()
 max_audi = hist_data["total_audi"].max()
 
@@ -209,7 +208,6 @@ bin_width = (max_audi - min_audi) / 20
 if bin_width == 0:
     most_common_start = int(min_audi)
     most_common_end = int(max_audi)
-
 else:
     bin_numbers = (
         (hist_data["total_audi"] - min_audi)
@@ -226,11 +224,9 @@ else:
         min_audi + (most_common_bin + 1) * bin_width
     )
 
-
 top_movie = hist_data.loc[
     hist_data["total_audi"].idxmax()
 ]
-
 
 st.markdown("#### 💡 이 그래프로 알 수 있는 것")
 
@@ -252,9 +248,13 @@ st.divider()
 st.subheader("🔵 4. 개봉일 스크린 수와 총 관객의 관계")
 
 scatter_data = df.dropna(
-    subset=["first_scrn", "total_audi", "movieNm", "genre"]
+    subset=[
+        "first_scrn",
+        "total_audi",
+        "movieNm",
+        "genre"
+    ]
 ).copy()
-
 
 fig4 = px.scatter(
     scatter_data,
@@ -305,18 +305,19 @@ st.divider()
 
 st.subheader("📦 5. 장르별 총 관객 분포")
 
-# total_audi가 있는 데이터만 사용
 box_data = df.dropna(
-    subset=["genre", "total_audi", "movieNm"]
+    subset=[
+        "genre",
+        "total_audi",
+        "movieNm"
+    ]
 ).copy()
 
-# 장르별 영화 편수 계산
 genre_movie_count = (
     box_data["genre"]
     .value_counts()
 )
 
-# 영화가 10편 이상인 장르만 선택
 valid_genres = genre_movie_count[
     genre_movie_count >= 10
 ].index
@@ -325,14 +326,16 @@ box_data = box_data[
     box_data["genre"].isin(valid_genres)
 ].copy()
 
-
 fig5 = px.box(
     box_data,
     x="genre",
     y="total_audi",
     color="genre",
     points="outliers",
-    custom_data=["movieNm", "total_audi"],
+    custom_data=[
+        "movieNm",
+        "total_audi"
+    ],
     title="영화가 10편 이상인 장르의 총 관객 분포",
     labels={
         "genre": "장르",
@@ -340,7 +343,6 @@ fig5 = px.box(
     }
 )
 
-# 이상치에 마우스를 올렸을 때 영화명과 총 관객 표시
 fig5.update_traces(
     hovertemplate=(
         "<b>%{customdata[0]}</b>"
@@ -366,4 +368,70 @@ st.markdown("#### 💡 이 그래프로 알 수 있는 것")
 st.info(
     "영화가 10편 이상인 장르를 대상으로 총 관객의 중앙값과 분포를 비교하고, "
     "상자 밖의 점을 통해 해당 장르에서 특히 많은 관객을 기록한 영화를 확인할 수 있습니다."
+)
+
+
+# ==================================================
+# 6. 첫 주 관객을 크기로 나타낸 버블 그래프
+# ==================================================
+
+st.divider()
+
+st.subheader("🫧 6. 개봉일 스크린 수와 총 관객의 관계 - 버블 그래프")
+
+bubble_data = df.dropna(
+    subset=[
+        "first_scrn",
+        "total_audi",
+        "first_week_audi",
+        "movieNm",
+        "genre"
+    ]
+).copy()
+
+fig6 = px.scatter(
+    bubble_data,
+    x="first_scrn",
+    y="total_audi",
+    size="first_week_audi",
+    color="genre",
+    hover_name="movieNm",
+    hover_data={
+        "first_scrn": ":,",
+        "total_audi": ":,",
+        "first_week_audi": ":,",
+        "genre": True
+    },
+    size_max=45,
+    title="개봉일 스크린 수와 총 관객의 관계",
+    labels={
+        "first_scrn": "개봉일 스크린 수",
+        "total_audi": "총 관객(명)",
+        "first_week_audi": "첫 주 관객",
+        "genre": "장르"
+    }
+)
+
+fig6.update_traces(
+    marker=dict(
+        opacity=0.65
+    )
+)
+
+fig6.update_layout(
+    xaxis_title="개봉일 스크린 수",
+    yaxis_title="총 관객(명)",
+    legend_title="장르",
+    margin=dict(t=60, b=20, l=20, r=20)
+)
+
+st.plotly_chart(
+    fig6,
+    use_container_width=True
+)
+
+st.markdown("#### 💡 이 그래프로 알 수 있는 것")
+
+st.info(
+    "개봉일 스크린 수와 총 관객의 관계에 더해 버블의 크기로 첫 주 관객 규모를 함께 비교할 수 있습니다."
 )
