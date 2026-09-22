@@ -2,24 +2,31 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
+# ==================================================
 # 페이지 설정
+# ==================================================
+
 st.set_page_config(
     page_title="영화 데이터 그래프 도감 2 - 분포와 관계",
     page_icon="🎬",
     layout="wide"
 )
 
-# 제목
 st.title("🎬 영화 데이터 그래프 도감 2 - 분포와 관계")
 
+
+# ==================================================
 # 데이터 불러오기
+# ==================================================
+
 DATA_URL = "https://raw.githubusercontent.com/greatsong/modudata/main/data/kobis_movies.csv"
+
 
 @st.cache_data
 def load_data():
     df = pd.read_csv(DATA_URL)
 
-    # 여러 장르가 |로 구분되어 있는 경우 첫 번째 장르만 사용
+    # 여러 장르가 |로 구분되어 있으면 첫 번째 장르만 사용
     df["genre"] = (
         df["genre"]
         .fillna("미상")
@@ -36,15 +43,18 @@ def load_data():
 
     return df
 
+
 df = load_data()
 
 st.write(f"총 **{len(df)}편**의 영화 데이터를 분석합니다.")
 
-# --------------------------------------------------
-# 첫 번째 그래프: 장르별 영화 편수
-# --------------------------------------------------
+
+# ==================================================
+# 1. 장르별 영화 편수 - 도넛 그래프
+# ==================================================
 
 st.divider()
+
 st.subheader("📊 1. 장르별 영화 편수")
 
 genre_count = (
@@ -54,6 +64,7 @@ genre_count = (
 )
 
 genre_count.columns = ["genre", "count"]
+
 
 fig1 = px.pie(
     genre_count,
@@ -78,22 +89,32 @@ fig1.update_layout(
     margin=dict(t=60, b=20, l=20, r=20)
 )
 
-st.plotly_chart(fig1, use_container_width=True)
+st.plotly_chart(
+    fig1,
+    use_container_width=True
+)
+
 
 st.markdown("#### 💡 이 그래프로 알 수 있는 것")
+
 st.info(
     "여기에 장르별 영화 편수와 전체에서 차지하는 비율을 통해 "
     "어떤 장르의 영화가 많이 포함되어 있는지 설명하세요."
 )
 
-# --------------------------------------------------
-# 두 번째 그래프: 장르별 영화 트리맵
-# --------------------------------------------------
+
+# ==================================================
+# 2. 장르별 영화 총 관객 - 트리맵
+# ==================================================
 
 st.divider()
+
 st.subheader("🌳 2. 장르별 영화 총 관객 트리맵")
 
-treemap_data = df.dropna(subset=["total_audi"]).copy()
+treemap_data = df.dropna(
+    subset=["total_audi", "movieNm"]
+).copy()
+
 
 fig2 = px.treemap(
     treemap_data,
@@ -115,22 +136,32 @@ fig2.update_layout(
     margin=dict(t=60, b=20, l=20, r=20)
 )
 
-st.plotly_chart(fig2, use_container_width=True)
+st.plotly_chart(
+    fig2,
+    use_container_width=True
+)
+
 
 st.markdown("#### 💡 이 그래프로 알 수 있는 것")
+
 st.info(
     "여기에 각 장르에서 어떤 영화가 많은 관객을 기록했는지와 "
     "영화별 총 관객 규모의 차이를 설명하세요."
 )
 
-# --------------------------------------------------
-# 세 번째 그래프: 총 관객 히스토그램
-# --------------------------------------------------
+
+# ==================================================
+# 3. 영화별 총 관객 분포 - 히스토그램
+# ==================================================
 
 st.divider()
+
 st.subheader("📈 3. 영화별 총 관객 분포")
 
-hist_data = df.dropna(subset=["total_audi"]).copy()
+hist_data = df.dropna(
+    subset=["total_audi"]
+).copy()
+
 
 fig3 = px.histogram(
     hist_data,
@@ -145,7 +176,7 @@ fig3 = px.histogram(
 
 fig3.update_traces(
     hovertemplate=(
-        "총 관객 구간: %{x}<br>"
+        "총 관객: %{x}<br>"
         "영화 편수: %{y}편"
         "<extra></extra>"
     )
@@ -157,35 +188,58 @@ fig3.update_layout(
     margin=dict(t=60, b=20, l=20, r=20)
 )
 
-st.plotly_chart(fig3, use_container_width=True)
+st.plotly_chart(
+    fig3,
+    use_container_width=True
+)
 
-# 가장 많이 몰려 있는 구간 계산
-counts, bin_edges = pd.cut(
-    hist_data["total_audi"],
-    bins=20,
-    include_lowest=True,
-    retbins=True
-).value_counts().sort_index().values, pd.cut(
-    hist_data["total_audi"],
-    bins=20,
-    include_lowest=True,
-    retbins=True
-).value_counts().sort_index().index
 
-max_bin_index = counts.argmax()
-most_common_start = int(bin_edges[max_bin_index])
-most_common_end = int(bin_edges[max_bin_index + 1])
+# ==================================================
+# 3번 그래프 설명
+# ==================================================
 
-# 가장 관객이 많은 영화
+# 히스토그램과 같은 범위로 20개 구간을 직접 계산
+min_audi = hist_data["total_audi"].min()
+max_audi = hist_data["total_audi"].max()
+
+# 전체 범위를 20개 구간으로 나눔
+bin_width = (max_audi - min_audi) / 20
+
+# 혹시 모든 값이 같은 경우를 대비
+if bin_width == 0:
+    most_common_start = int(min_audi)
+    most_common_end = int(max_audi)
+else:
+    # 각 영화가 어느 구간에 속하는지 계산
+    bin_numbers = (
+        (hist_data["total_audi"] - min_audi)
+        / bin_width
+    ).astype(int)
+
+    # 가장 영화가 많이 들어 있는 구간
+    most_common_bin = bin_numbers.value_counts().idxmax()
+
+    most_common_start = int(
+        min_audi + most_common_bin * bin_width
+    )
+
+    most_common_end = int(
+        min_audi + (most_common_bin + 1) * bin_width
+    )
+
+
+# 총 관객이 가장 많은 영화
 top_movie = hist_data.loc[
     hist_data["total_audi"].idxmax()
 ]
 
+
 st.markdown("#### 💡 이 그래프로 알 수 있는 것")
 
 st.info(
-    f"대부분의 영화는 총 관객 **{most_common_start:,}명~"
-    f"{most_common_end:,}명 구간**에 몰려 있으며, "
-    f"총 관객이 가장 많은 영화는 **{top_movie['movieNm']}**"
+    f"대부분의 영화는 총 관객 "
+    f"**{most_common_start:,}명~{most_common_end:,}명 구간**에 "
+    f"몰려 있으며, 총 관객이 가장 많은 영화는 "
+    f"**{top_movie['movieNm']}**"
     f"({int(top_movie['total_audi']):,}명)입니다."
 )
