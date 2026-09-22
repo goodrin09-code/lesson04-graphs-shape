@@ -35,6 +35,15 @@ def load_data():
         .str[0]
     )
 
+    # 여러 제작 국가가 |로 구분되어 있으면 첫 번째 국가만 사용
+    df["nation"] = (
+        df["nation"]
+        .fillna("미상")
+        .astype(str)
+        .str.split("|")
+        .str[0]
+    )
+
     # 숫자형 데이터로 변환
     df["total_audi"] = pd.to_numeric(
         df["total_audi"],
@@ -433,5 +442,56 @@ st.plotly_chart(
 st.markdown("#### 💡 이 그래프로 알 수 있는 것")
 
 st.info(
-    "개봉일 스크린 수와 총 관객의 관계에 더해 버블의 크기로 첫 주 관객 규모를 함께 비교할 수 있습니다."
+    "개봉일 스크린 수와 총 관객의 관계에 더해 버블의 크기로 "
+    "첫 주 관객 규모를 함께 비교할 수 있습니다."
+)
+
+
+# ==================================================
+# 7. 제작 국가 → 장르 - 선버스트 그래프
+# ==================================================
+
+st.divider()
+
+st.subheader("☀️ 7. 제작 국가별 장르 분포")
+
+sunburst_data = (
+    df.dropna(
+        subset=["nation", "genre"]
+    )
+    .groupby(["nation", "genre"])
+    .size()
+    .reset_index(name="count")
+)
+
+fig7 = px.sunburst(
+    sunburst_data,
+    path=["nation", "genre"],
+    values="count",
+    title="제작 국가에서 장르로 내려가는 영화 분포",
+    custom_data=["count"]
+)
+
+fig7.update_traces(
+    hovertemplate=(
+        "<b>%{label}</b>"
+        "<br>영화 편수: %{value}편"
+        "<extra></extra>"
+    )
+)
+
+fig7.update_layout(
+    margin=dict(t=60, b=20, l=20, r=20)
+)
+
+st.plotly_chart(
+    fig7,
+    use_container_width=True
+)
+
+st.markdown("#### 💡 이 그래프로 알 수 있는 것")
+
+st.info(
+    "제작 국가별로 어떤 장르의 영화가 많이 포함되어 있는지와 "
+    "각 국가와 장르가 전체 영화에서 차지하는 규모를 비교할 수 있습니다."
 )
