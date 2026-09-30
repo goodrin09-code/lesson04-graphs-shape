@@ -10,7 +10,7 @@ st.set_page_config(
 
 st.title("🎬 영화 데이터 그래프 도감 2 - 분포와 관계")
 
-# 새로운 CSV 주소
+# CSV 데이터 주소
 DATA_URL = "https://raw.githubusercontent.com/happykth/data/main/kobis_movies.csv"
 
 
@@ -36,7 +36,7 @@ def load_data():
         .str[0]
     )
 
-    # 숫자형으로 변환
+    # 숫자형 데이터로 변환
     df["total_audi"] = pd.to_numeric(
         df["total_audi"],
         errors="coerce"
@@ -218,13 +218,11 @@ else:
     )
 
     most_common_start = int(
-        min_audi
-        + most_common_bin * bin_width
+        min_audi + most_common_bin * bin_width
     )
 
     most_common_end = int(
-        min_audi
-        + (most_common_bin + 1) * bin_width
+        min_audi + (most_common_bin + 1) * bin_width
     )
 
 top_movie = hist_data.loc[
@@ -504,23 +502,24 @@ question = (
 
 st.markdown(f"**질문: {question}**")
 
+# 질문에 맞는 데이터만 사용
 question_data = df.dropna(
     subset=[
+        "first_week_audi",
         "days_in_top10",
-        "total_audi",
         "movieNm"
     ]
 ).copy()
 
 fig8 = px.scatter(
     question_data,
-    x="days_in_top10",
-    y="total_audi",
+    x="first_week_audi",
+    y="days_in_top10",
     hover_name="movieNm",
     title=question,
     labels={
-        "days_in_top10": "10위권에 머문 날수",
-        "total_audi": "총 관객(명)"
+        "first_week_audi": "첫 주 관객 수",
+        "days_in_top10": "TOP 10에 머문 날수"
     }
 )
 
@@ -532,9 +531,14 @@ fig8.update_traces(
 )
 
 fig8.update_layout(
-    xaxis_title="10위권에 머문 날수",
-    yaxis_title="총 관객(명)",
-    margin=dict(t=80, b=20, l=20, r=20)
+    xaxis_title="첫 주 관객 수",
+    yaxis_title="TOP 10에 머문 날수",
+    margin=dict(
+        t=80,
+        b=20,
+        l=20,
+        r=20
+    )
 )
 
 st.plotly_chart(
@@ -545,7 +549,7 @@ st.plotly_chart(
 st.markdown("#### 💡 이 그래프로 알 수 있는 것")
 
 st.info(
-    "영화가 TOP 10에 머문 날수와 총 관객의 관계를 비교하여, "
-    "10위권에 오래 머문 영화일수록 총 관객도 많은 경향이 있는지 "
-    "살펴볼 수 있습니다."
+    "첫 주 관객 수와 TOP 10에 머문 날수의 관계를 비교하여, "
+    "첫 주에 많은 관객을 모은 영화일수록 TOP 10에 더 오래 머무르는 "
+    "경향이 있는지 살펴볼 수 있습니다."
 )
