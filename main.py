@@ -10,7 +10,8 @@ st.set_page_config(
 
 st.title("🎬 영화 데이터 그래프 도감 2 - 분포와 관계")
 
-DATA_URL = "https://raw.githubusercontent.com/greatsong/modudata/main/data/kobis_movies.csv"
+# 새로운 CSV 주소
+DATA_URL = "https://raw.githubusercontent.com/happykth/data/main/kobis_movies.csv"
 
 
 @st.cache_data
@@ -36,13 +37,24 @@ def load_data():
     )
 
     # 숫자형으로 변환
-    df["total_audi"] = pd.to_numeric(df["total_audi"], errors="coerce")
-    df["first_scrn"] = pd.to_numeric(df["first_scrn"], errors="coerce")
-    df["first_week_audi"] = pd.to_numeric(
-        df["first_week_audi"], errors="coerce"
+    df["total_audi"] = pd.to_numeric(
+        df["total_audi"],
+        errors="coerce"
     )
+
+    df["first_scrn"] = pd.to_numeric(
+        df["first_scrn"],
+        errors="coerce"
+    )
+
+    df["first_week_audi"] = pd.to_numeric(
+        df["first_week_audi"],
+        errors="coerce"
+    )
+
     df["days_in_top10"] = pd.to_numeric(
-        df["days_in_top10"], errors="coerce"
+        df["days_in_top10"],
+        errors="coerce"
     )
 
     return df
@@ -86,9 +98,13 @@ fig1.update_layout(
     margin=dict(t=60, b=20, l=20, r=20)
 )
 
-st.plotly_chart(fig1, use_container_width=True)
+st.plotly_chart(
+    fig1,
+    use_container_width=True
+)
 
 st.markdown("#### 💡 이 그래프로 알 수 있는 것")
+
 st.info(
     "여기에 장르별 영화 편수와 전체에서 차지하는 비율을 통해 "
     "어떤 장르의 영화가 많이 포함되어 있는지 설명하세요."
@@ -126,9 +142,13 @@ fig2.update_layout(
     margin=dict(t=60, b=20, l=20, r=20)
 )
 
-st.plotly_chart(fig2, use_container_width=True)
+st.plotly_chart(
+    fig2,
+    use_container_width=True
+)
 
 st.markdown("#### 💡 이 그래프로 알 수 있는 것")
+
 st.info(
     "여기에 각 장르에서 어떤 영화가 많은 관객을 기록했는지와 "
     "영화별 총 관객 규모의 차이를 설명하세요."
@@ -171,7 +191,10 @@ fig3.update_layout(
     margin=dict(t=60, b=20, l=20, r=20)
 )
 
-st.plotly_chart(fig3, use_container_width=True)
+st.plotly_chart(
+    fig3,
+    use_container_width=True
+)
 
 min_audi = hist_data["total_audi"].min()
 max_audi = hist_data["total_audi"].max()
@@ -181,19 +204,27 @@ bin_width = (max_audi - min_audi) / 20
 if bin_width == 0:
     most_common_start = int(min_audi)
     most_common_end = int(max_audi)
+
 else:
     bin_numbers = (
-        (hist_data["total_audi"] - min_audi) / bin_width
+        (hist_data["total_audi"] - min_audi)
+        / bin_width
     ).astype(int)
 
-    most_common_bin = bin_numbers.value_counts().idxmax()
+    most_common_bin = (
+        bin_numbers
+        .value_counts()
+        .idxmax()
+    )
 
     most_common_start = int(
-        min_audi + most_common_bin * bin_width
+        min_audi
+        + most_common_bin * bin_width
     )
 
     most_common_end = int(
-        min_audi + (most_common_bin + 1) * bin_width
+        min_audi
+        + (most_common_bin + 1) * bin_width
     )
 
 top_movie = hist_data.loc[
@@ -255,9 +286,13 @@ fig4.update_layout(
     margin=dict(t=60, b=20, l=20, r=20)
 )
 
-st.plotly_chart(fig4, use_container_width=True)
+st.plotly_chart(
+    fig4,
+    use_container_width=True
+)
 
 st.markdown("#### 💡 이 그래프로 알 수 있는 것")
+
 st.info(
     "개봉일 스크린 수와 총 관객의 관계를 살펴보고, "
     "스크린 수가 많은 영화일수록 총 관객도 많은 경향이 나타나는지 확인할 수 있습니다."
@@ -321,7 +356,10 @@ fig5.update_layout(
     margin=dict(t=60, b=20, l=20, r=20)
 )
 
-st.plotly_chart(fig5, use_container_width=True)
+st.plotly_chart(
+    fig5,
+    use_container_width=True
+)
 
 st.markdown("#### 💡 이 그래프로 알 수 있는 것")
 
@@ -385,7 +423,10 @@ fig6.update_layout(
     margin=dict(t=60, b=20, l=20, r=20)
 )
 
-st.plotly_chart(fig6, use_container_width=True)
+st.plotly_chart(
+    fig6,
+    use_container_width=True
+)
 
 st.markdown("#### 💡 이 그래프로 알 수 있는 것")
 
@@ -436,7 +477,10 @@ fig7.update_layout(
     margin=dict(t=60, b=20, l=20, r=20)
 )
 
-st.plotly_chart(fig7, use_container_width=True)
+st.plotly_chart(
+    fig7,
+    use_container_width=True
+)
 
 st.markdown("#### 💡 이 그래프로 알 수 있는 것")
 
@@ -447,13 +491,16 @@ st.info(
 
 
 # =========================================================
-# 8. 나만의 질문 - 10위권 유지 기간과 총 관객의 관계
+# 8. 나만의 질문
 # =========================================================
 
 st.divider()
 st.subheader("❓ 8. 나만의 질문 — 만들어서 분석하기")
 
-question = "첫 주 관객 수가 많은 영화일수록 1년 동안 TOP 10에 머문 날도 많은가"
+question = (
+    "첫 주 관객 수가 많은 영화일수록 "
+    "1년 동안 TOP 10에 머문 날도 많은가"
+)
 
 st.markdown(f"**질문: {question}**")
 
@@ -490,11 +537,15 @@ fig8.update_layout(
     margin=dict(t=80, b=20, l=20, r=20)
 )
 
-st.plotly_chart(fig8, use_container_width=True)
+st.plotly_chart(
+    fig8,
+    use_container_width=True
+)
 
 st.markdown("#### 💡 이 그래프로 알 수 있는 것")
 
 st.info(
     "영화가 TOP 10에 머문 날수와 총 관객의 관계를 비교하여, "
-    "10위권에 오래 머문 영화일수록 총 관객도 많은 경향이 있는지 살펴볼 수 있습니다."
+    "10위권에 오래 머문 영화일수록 총 관객도 많은 경향이 있는지 "
+    "살펴볼 수 있습니다."
 )
